@@ -11,6 +11,7 @@ Resources:
     Type: "AWS::Elasticsearch::Domain"
     Properties:
       DomainName: !Join [ "-", [ {Ref: ResourcePrefix}, elastic-cluster ] ]
+      ElasticsearchVersion: "5.1"
       ElasticsearchClusterConfig:
         DedicatedMasterEnabled: "false"
         InstanceCount: "1"
@@ -30,7 +31,7 @@ Resources:
             Effect: "Allow"
             Principal: "*"
             Action: "es:*"
-            Resource: "arn:aws:es:ap-southeast-2:250658028269:domain/richard-elastic-cluster2/*"
+            Resource: !Join [ "", [ "arn:aws:es:ap-southeast-2:250658028269:domain/", {Ref: ResourcePrefix}, "elastic-cluster/*" ] ]
             Condition:
               IpAddress:
                 aws:SourceIp:
