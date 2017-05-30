@@ -1,0 +1,12 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "es:*"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:es:us-west-2:123456789012:domain/streaming-logs/*"
+        }
+    ]
+}

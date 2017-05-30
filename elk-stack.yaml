@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  ElasticsearchDomain:
+    Type: "AWS::Elasticsearch::Domain"
+    Properties:
+      DomainName: "test123"
+      ElasticsearchClusterConfig:
+        DedicatedMasterEnabled: "false"
+        InstanceCount: "1"
+        ZoneAwarenessEnabled: "false"
+        InstanceType: "m3.medium.elasticsearch"
+        # DedicatedMasterType: "m3.medium.elasticsearch"
+        # DedicatedMasterCount: "3"
+      EBSOptions:
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: 20
+        VolumeType: "gp2"
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: "0"
+      AccessPolicies:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              AWS: "250658028269"
+            Action: "es:*"
+            Resource: "arn:aws:es:ap-southeast-2:250658028269:domain/test123/*"
+      AdvancedOptions:
+        rest.action.multi.allow_explicit_index: "true"
+  esLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: "esLogGroup"
+      RetentionInDays: 7
+  LogStream:
+    Type: "AWS::Logs::LogStream"
+    Properties:
+      LogGroupName: "esLogGroup"
+      LogStreamName: "esLogStream"
+#TODO:
+#iam role that has access to write access elastic search
+#possible in cloudformation
+#lambda function that assumes that role, and has code to process events
+#is there a shortcut for this in cloudformation?
+#or do we need the code in a bucket somewhere?
+#linkbetween cloudwatch log group and the lambda function
+#is it possible to do in template?
+#dummy service to write to logstream, for testing purposes?

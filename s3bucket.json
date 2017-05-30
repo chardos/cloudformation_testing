@@ -1,0 +1,31 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Creates an S3 bucket",
+  "Parameters" : {
+    "S3Buck" : {
+        "Description" : "Name of this bucket",
+        "Type" : "String",
+        "Default" : "mys3bucketeerrich"
+    }
+  },
+  "Resources": {
+    "RichBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName" : {"Ref" : "S3Buck"},
+        "Tags": [
+            {
+              "Key" : "name",
+              "Value" : "rich tan"
+            }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+      "S3BucketName" : {
+          "Value": {"Ref" : "S3Buck"},
+          "Description" : "Richys S3 Bucket"
+      }
+  }
+}

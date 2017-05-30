@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "A stack for creating Elasticsearch service, and connecting it to a log stream"
+Parameters:
+  ResourcePrefix:
+    Type: String
+    Description: This prefix will be prepended to the names of all the resources in this stack. Must be lowercase.
+    AllowedPattern: "[a-z0-9]+"
+    ConstraintDescription: ResourcePrefix parameter can only contain lowercase letters and numbers
+Resources:
+  ElasticsearchDomain:
+    Type: "AWS::Elasticsearch::Domain"
+    Properties:
+      DomainName: !Join [ "-", [ {Ref: ResourcePrefix}, elastic-cluster ] ]
+      ElasticsearchClusterConfig:
+        DedicatedMasterEnabled: "false"
+        InstanceCount: "1"
+        ZoneAwarenessEnabled: "false"
+        InstanceType: "m3.medium.elasticsearch"
+      EBSOptions:
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: 20
+        VolumeType: "gp2"
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: "0"
+      AccessPolicies:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal: "*"
+            Action: "es:*"
+            Resource: "arn:aws:es:ap-southeast-2:250658028269:domain/richard-elastic-cluster2/*"
+            Condition:
+              IpAddress:
+                aws:SourceIp:
+                - 203.44.0.0/16
+                - 203.35.89.100/32
+                - 110.22.208.123/32
+                - 101.182.203.150/32
+                - 101.182.176.72/32
+                - 27.32.152.201/32
+      AdvancedOptions:
+        rest.action.multi.allow_explicit_index: "true"
+  LambdaStreamToElasticSearch:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        S3Bucket: richard-tan-elastic-bucket
+        S3Key: streamlambda.js.zip
+      Description: Lambda that streams logs to ElasticSearch
+      FunctionName: !Join [ "-", [ {Ref: ResourcePrefix}, stream-to-elastic-search ] ]
+      Handler: streamlambda.handler
+      Role: "arn:aws:iam::250658028269:role/lambda_elasticsearch_execution_antonspike"
+      Runtime: "nodejs4.3"
+      Environment:
+        Variables:  { "ESENDPOINT": !GetAtt ElasticsearchDomain.DomainEndpoint }
+
+#TODO:
+# lambda 1 exists - sumofunction
+# create lambda2 - "stream to elastic search"
+# create a role for the "stream to elastic search" lambda - like lambda_elasticsearch_execution_antonspike
+# provide parameter for lambda 1 - which will be connected to lambda 2
+
+#iam role that has access to write access elastic search
+#possible in cloudformation
+#lambda function that assumes that role, and has code to process events
+#is there a shortcut for this in cloudformation?
+#or do we need the code in a bucket somewhere?
+#linkbetween cloudwatch log group and the lambda function
+#is it possible to do in template?
+#dummy service to write to logstream, for testing purposes?
