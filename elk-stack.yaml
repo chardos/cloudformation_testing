@@ -1,16 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Description: "A stack for creating Elasticsearch service, and connecting it to a log stream"
+Parameters:
+  ResourcePrefix:
+    Type: String
+    Description: This prefix will be prepended to the names of all the resources in this stack. Must be lowercase.
+    AllowedPattern: "[a-z0-9]+"
+    ConstraintDescription: ResourcePrefix parameter can only contain lowercase letters and numbers
 Resources:
   ElasticsearchDomain:
     Type: "AWS::Elasticsearch::Domain"
     Properties:
-      DomainName: "test123"
+      DomainName: !Join [ "-", [ {Ref: ResourcePrefix}, elastic-cluster ] ]
       ElasticsearchClusterConfig:
         DedicatedMasterEnabled: "false"
         InstanceCount: "1"
         ZoneAwarenessEnabled: "false"
         InstanceType: "m3.medium.elasticsearch"
-        # DedicatedMasterType: "m3.medium.elasticsearch"
-        # DedicatedMasterCount: "3"
       EBSOptions:
         EBSEnabled: true
         Iops: 0
@@ -23,23 +28,40 @@ Resources:
         Statement:
           -
             Effect: "Allow"
-            Principal:
-              AWS: "250658028269"
+            Principal: "*"
             Action: "es:*"
-            Resource: "arn:aws:es:ap-southeast-2:250658028269:domain/test123/*"
+            Resource: "arn:aws:es:ap-southeast-2:250658028269:domain/richard-elastic-cluster2/*"
+            Condition:
+              IpAddress:
+                aws:SourceIp:
+                - 203.44.0.0/16
+                - 203.35.89.100/32
+                - 110.22.208.123/32
+                - 101.182.203.150/32
+                - 101.182.176.72/32
+                - 27.32.152.201/32
       AdvancedOptions:
         rest.action.multi.allow_explicit_index: "true"
-  esLogGroup:
-    Type: "AWS::Logs::LogGroup"
+  LambdaStreamToElasticSearch:
+    Type: "AWS::Lambda::Function"
     Properties:
-      LogGroupName: "esLogGroup"
-      RetentionInDays: 7
-  LogStream:
-    Type: "AWS::Logs::LogStream"
-    Properties:
-      LogGroupName: "esLogGroup"
-      LogStreamName: "esLogStream"
+      Code:
+        S3Bucket: richard-tan-elastic-bucket
+        S3Key: streamlambda.js.zip
+      Description: Lambda that streams logs to ElasticSearch
+      FunctionName: !Join [ "-", [ {Ref: ResourcePrefix}, stream-to-elastic-search ] ]
+      Handler: streamlambda.handler
+      Role: "arn:aws:iam::250658028269:role/lambda_elasticsearch_execution_antonspike"
+      Runtime: "nodejs4.3"
+      Environment:
+        Variables:  { "ESENDPOINT": !GetAtt ElasticsearchDomain.DomainEndpoint }
+
 #TODO:
+# lambda 1 exists - sumofunction
+# create lambda2 - "stream to elastic search"
+# create a role for the "stream to elastic search" lambda - like lambda_elasticsearch_execution_antonspike
+# provide parameter for lambda 1 - which will be connected to lambda 2
+
 #iam role that has access to write access elastic search
 #possible in cloudformation
 #lambda function that assumes that role, and has code to process events
