@@ -4,7 +4,7 @@ Parameters:
   ResourcePrefix:
     Type: String
     Description: This prefix will be prepended to the names of all the resources in this stack. Must be lowercase.
-    AllowedPattern: "[a-z0-9]+"
+    AllowedPattern: "[a-z0-9-]+"
     ConstraintDescription: ResourcePrefix parameter can only contain lowercase letters and numbers
 Resources:
   ElasticsearchDomain:
@@ -31,7 +31,7 @@ Resources:
             Effect: "Allow"
             Principal: "*"
             Action: "es:*"
-            Resource: !Join [ "", [ "arn:aws:es:ap-southeast-2:250658028269:domain/", {Ref: ResourcePrefix}, "elastic-cluster/*" ] ]
+            Resource: !Join [ "", [ "arn:aws:es:ap-southeast-2:250658028269:domain/", {Ref: ResourcePrefix}, "-elastic-cluster/*" ] ]
             Condition:
               IpAddress:
                 aws:SourceIp:
@@ -52,22 +52,32 @@ Resources:
       Description: Lambda that streams logs to ElasticSearch
       FunctionName: !Join [ "-", [ {Ref: ResourcePrefix}, stream-to-elastic-search ] ]
       Handler: streamlambda.handler
-      Role: "arn:aws:iam::250658028269:role/lambda_elasticsearch_execution_antonspike"
+      Role: !GetAtt LambdaRole.Arn
       Runtime: "nodejs4.3"
       Environment:
-        Variables:  { "ESENDPOINT": !GetAtt ElasticsearchDomain.DomainEndpoint }
-
-#TODO:
-# lambda 1 exists - sumofunction
-# create lambda2 - "stream to elastic search"
-# create a role for the "stream to elastic search" lambda - like lambda_elasticsearch_execution_antonspike
-# provide parameter for lambda 1 - which will be connected to lambda 2
-
-#iam role that has access to write access elastic search
-#possible in cloudformation
-#lambda function that assumes that role, and has code to process events
-#is there a shortcut for this in cloudformation?
-#or do we need the code in a bucket somewhere?
-#linkbetween cloudwatch log group and the lambda function
-#is it possible to do in template?
-#dummy service to write to logstream, for testing purposes?
+        Variables: {
+          ESENDPOINT: 'search-test123-sij6bfpdgjcoadoqrq6clpktse.ap-southeast-2.es.amazonaws.com',
+        }
+    DependsOn: 'LambdaRole'
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+      Policies:
+        -
+          PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "es:*"
+                Resource: "*"

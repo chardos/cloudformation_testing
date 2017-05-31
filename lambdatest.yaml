@@ -1,5 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "A stack for creating Elasticsearch service, and connecting it to a log stream"
+Description: "A lambda test"
+Parameters:
+  ResourcePrefix:
+    Type: String
+    Description: This prefix will be prepended to the names of all the resources in this stack. Must be lowercase.
+    AllowedPattern: "[a-z0-9]+"
+    ConstraintDescription: ResourcePrefix parameter can only contain lowercase letters and numbers
 Resources:
   LambdaStreamToElasticSearch:
     Type: "AWS::Lambda::Function"
@@ -8,9 +14,34 @@ Resources:
         S3Bucket: richard-tan-elastic-bucket
         S3Key: streamlambda.js.zip
       Description: Lambda that streams logs to ElasticSearch
-      FunctionName: stream-to-elastic-search-again
+      FunctionName: !Join [ "-", [ {Ref: ResourcePrefix}, stream-to-elastic-search ] ]
       Handler: streamlambda.handler
-      Role: "arn:aws:iam::250658028269:role/lambda_elasticsearch_execution_antonspike"
+      Role: !GetAtt LambdaRole.Arn
       Runtime: "nodejs4.3"
       Environment:
-        Variables: {ESENDPOINT: 'search-test123-sij6bfpdgjcoadoqrq6clpktse.ap-southeast-2.es.amazonaws.com'}
+        Variables: {
+          ESENDPOINT: 'search-test123-sij6bfpdgjcoadoqrq6clpktse.ap-southeast-2.es.amazonaws.com',
+        }
+    DependsOn: 'LambdaRole'
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+      Policies:
+        -
+          PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "es:*"
+                Resource: "*"
