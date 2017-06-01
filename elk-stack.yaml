@@ -6,6 +6,12 @@ Parameters:
     Description: This prefix will be prepended to the names of all the resources in this stack. Must be lowercase.
     AllowedPattern: "[a-z0-9-]+"
     ConstraintDescription: ResourcePrefix parameter can only contain lowercase letters and numbers
+  LogGroupName:
+    Type: String
+    Description: The name of the log Group
+  LogGroupArn:
+    Type: String
+    Description: The ARN of the log Group
 Resources:
   ElasticsearchDomain:
     Type: "AWS::Elasticsearch::Domain"
@@ -86,7 +92,7 @@ Resources:
     Properties:
       DestinationArn: !GetAtt LambdaStreamToElasticSearch.Arn
       FilterPattern: ''
-      LogGroupName: /aws/lambda/BetPublisherSumoFunction-ci
+      LogGroupName: !Ref LogGroupName
     DependsOn: LambdaPermission
   LambdaPermission:
     Type: "AWS::Lambda::Permission"
@@ -94,5 +100,5 @@ Resources:
       Action: "lambda:*"
       FunctionName: !Ref "LambdaStreamToElasticSearch"
       Principal: !Sub "logs.${AWS::Region}.amazonaws.com"
-      SourceArn: arn:aws:logs:ap-southeast-2:250658028269:log-group:/aws/lambda/BetPublisherSumoFunction-ci:*
+      SourceArn: !Ref LogGroupArn
     DependsOn: LambdaStreamToElasticSearch
