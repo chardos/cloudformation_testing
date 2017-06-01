@@ -9,6 +9,9 @@ Parameters:
   LogGroupName:
     Type: String
     Description: The name of the log Group
+  LogGroupArn:
+    Type: String
+    Description: The ARN of the log Group
 Resources:
   LambdaStreamToElasticSearch:
     Type: "AWS::Lambda::Function"
@@ -58,7 +61,7 @@ Resources:
     Properties:
       DestinationArn: !GetAtt LambdaStreamToElasticSearch.Arn
       FilterPattern: ''
-      LogGroupName: /aws/lambda/BetPublisherSumoFunction-ci
+      LogGroupName: !Ref LogGroupName
     DependsOn: LambdaPermission
   LambdaPermission:
     Type: "AWS::Lambda::Permission"
@@ -66,7 +69,7 @@ Resources:
       Action: "lambda:*"
       FunctionName: !Ref "LambdaStreamToElasticSearch"
       Principal: !Sub "logs.${AWS::Region}.amazonaws.com"
-      SourceArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/BetPublisherSumoFunction-ci:*"
+      SourceArn: !Ref LogGroupArn
     DependsOn: LambdaStreamToElasticSearch
   # LambdaAppLogGroupArnInvokePermission:
   #   Type: AWS::Lambda::Permission
