@@ -6,6 +6,9 @@ Parameters:
     Description: This prefix will be prepended to the names of all the resources in this stack. Must be lowercase.
     AllowedPattern: "[a-z0-9]+"
     ConstraintDescription: ResourcePrefix parameter can only contain lowercase letters and numbers
+  LogGroupName:
+    Type: String
+    Description: The name of the log Group
 Resources:
   LambdaStreamToElasticSearch:
     Type: "AWS::Lambda::Function"
@@ -54,9 +57,6 @@ Resources:
     Type: "AWS::Logs::SubscriptionFilter"
     Properties:
       DestinationArn: !GetAtt LambdaStreamToElasticSearch.Arn
-      # FIGURE OUT TO SEE WHAT POLICIES ARE ACTUALLY APPLIED
-      # DestinationArn: arn:aws:lambda:ap-southeast-2:250658028269:function:rich-elk-stream-to-elastic-search
-      # RoleArn: arn:aws:iam::250658028269:role/AWS-CodePipeline-Service
       FilterPattern: ''
       LogGroupName: /aws/lambda/BetPublisherSumoFunction-ci
     DependsOn: LambdaPermission
@@ -66,8 +66,7 @@ Resources:
       Action: "lambda:*"
       FunctionName: !Ref "LambdaStreamToElasticSearch"
       Principal: !Sub "logs.${AWS::Region}.amazonaws.com"
-      SourceArn: arn:aws:logs:ap-southeast-2:250658028269:log-group:/aws/lambda/BetPublisherSumoFunction-ci:*
-      # SourceArn: arn:aws:lambda:ap-southeast-2:250658028269:function:BetPublisherSumoFunction-ci
+      SourceArn: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/BetPublisherSumoFunction-ci:*"
     DependsOn: LambdaStreamToElasticSearch
   # LambdaAppLogGroupArnInvokePermission:
   #   Type: AWS::Lambda::Permission

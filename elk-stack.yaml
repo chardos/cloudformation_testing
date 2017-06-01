@@ -81,3 +81,18 @@ Resources:
                 Effect: "Allow"
                 Action: "es:*"
                 Resource: "*"
+  SubsciptionToCloudwatchLogGroup:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn: !GetAtt LambdaStreamToElasticSearch.Arn
+      FilterPattern: ''
+      LogGroupName: /aws/lambda/BetPublisherSumoFunction-ci
+    DependsOn: LambdaPermission
+  LambdaPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:*"
+      FunctionName: !Ref "LambdaStreamToElasticSearch"
+      Principal: !Sub "logs.${AWS::Region}.amazonaws.com"
+      SourceArn: arn:aws:logs:ap-southeast-2:250658028269:log-group:/aws/lambda/BetPublisherSumoFunction-ci:*
+    DependsOn: LambdaStreamToElasticSearch
