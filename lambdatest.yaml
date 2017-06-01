@@ -20,7 +20,7 @@ Resources:
       Runtime: "nodejs4.3"
       Environment:
         Variables: {
-          ESENDPOINT: 'search-test123-sij6bfpdgjcoadoqrq6clpktse.ap-southeast-2.es.amazonaws.com',
+          ESENDPOINT: 'search-rich-elk-elastic-cluster-tgej4aef5oduxz7cwyorvrgopy.ap-southeast-2.es.amazonaws.com',
         }
     DependsOn: 'LambdaRole'
   LambdaRole:
@@ -31,10 +31,13 @@ Resources:
         Statement:
           -
             Principal:
-              Service: "lambda.amazonaws.com"
+              Service:
+                - "lambda.amazonaws.com"
+                - !Sub "logs.${AWS::Region}.amazonaws.com"
             Action:
               - "sts:AssumeRole"
             Effect: "Allow"
+      Path: "/"
       Policies:
         -
           PolicyName: "root"
@@ -43,5 +46,33 @@ Resources:
             Statement:
               -
                 Effect: "Allow"
-                Action: "es:*"
+                Action:
+                  - "es:*"
+                  - "logs:*"
                 Resource: "*"
+  SubsciptionToCloudwatchLogGroup:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn: !GetAtt LambdaStreamToElasticSearch.Arn
+      # FIGURE OUT TO SEE WHAT POLICIES ARE ACTUALLY APPLIED
+      # DestinationArn: arn:aws:lambda:ap-southeast-2:250658028269:function:rich-elk-stream-to-elastic-search
+      # RoleArn: arn:aws:iam::250658028269:role/AWS-CodePipeline-Service
+      FilterPattern: ''
+      LogGroupName: /aws/lambda/BetPublisherSumoFunction-ci
+    DependsOn: LambdaPermission
+  LambdaPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:*"
+      FunctionName: !Ref "LambdaStreamToElasticSearch"
+      Principal: !Sub "logs.${AWS::Region}.amazonaws.com"
+      SourceArn: arn:aws:logs:ap-southeast-2:250658028269:log-group:/aws/lambda/BetPublisherSumoFunction-ci:*
+      # SourceArn: arn:aws:lambda:ap-southeast-2:250658028269:function:BetPublisherSumoFunction-ci
+    DependsOn: LambdaStreamToElasticSearch
+  # LambdaAppLogGroupArnInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !Join [ "-", [ {Ref: ResourcePrefix}, stream-to-elastic-search ] ]
+  #     Action: "lambda:InvokeFunction"
+  #     Principal: !Sub "logs.${AWS::Region}.amazonaws.com"
+  #   DependsOn: LambdaStreamToElasticSearch
