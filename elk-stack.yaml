@@ -56,7 +56,7 @@ Resources:
       Runtime: "nodejs4.3"
       Environment:
         Variables: {
-          ESENDPOINT: 'search-test123-sij6bfpdgjcoadoqrq6clpktse.ap-southeast-2.es.amazonaws.com',
+          ESENDPOINT: !GetAtt ElasticsearchDomain.DomainEndpoint
         }
     DependsOn: 'LambdaRole'
   LambdaRole:
