@@ -37,7 +37,13 @@ Resources:
             Effect: "Allow"
             Principal: "*"
             Action: "es:*"
-            Resource: !Join [ "", [ "arn:aws:es:ap-southeast-2:250658028269:domain/", {Ref: ResourcePrefix}, "-elastic-cluster/*" ] ]
+            Resource: !Join [ "", [
+              "arn:aws:es:ap-southeast-2:",
+              {"Ref": "AWS::AccountId"},
+              ":domain/",
+              {Ref: ResourcePrefix},
+              "-elastic-cluster/*"
+            ]]
             Condition:
               IpAddress:
                 aws:SourceIp:
