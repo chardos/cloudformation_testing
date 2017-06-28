@@ -31,16 +31,6 @@
       "Default": "SwiftOtter",
       "Type": "AWS::EC2::KeyPair::KeyName"
     },
-    "DnsPrefix": {
-      "Description": "Prefix for Jenkins' DNS record (<prefix>.<zone>)",
-      "Type": "String",
-      "Default": ""
-    },
-    "DnsZone": {
-      "Description": "Route53-hosted zone to use for the DNS record (<prefix>.<zone>)",
-      "Type": "String",
-      "Default": ""
-    },
     "S3Bucket": {
       "Description": "Existing S3 bucket to use for Jenkins backups and restores",
       "Type": "String",

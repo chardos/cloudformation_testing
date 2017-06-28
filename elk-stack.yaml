@@ -53,7 +53,7 @@ Resources:
     Type: "AWS::Lambda::Function"
     Properties:
       Code:
-        S3Bucket: richard-tan-elastic-bucket
+        S3Bucket: elk-stack-bucket
         S3Key: streamlambda.js.zip
       Description: Lambda that streams logs to ElasticSearch
       FunctionName: !Join [ "-", [ {Ref: ResourcePrefix}, stream-to-elastic-search ] ]
