@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: "A stack for creating Elasticsearch service, and connecting it to a log stream"
 Resources:
   JenkinsInstance:
@@ -6,3 +6,14 @@ Resources:
     Properties:
       ImageId: "ami-e3e1f280"
       InstanceType: "t2.micro"
+      SecurityGroups:
+      - !Ref JenkinsSecurityGroup
+  JenkinsSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security group for jenkins instance"
+      SecurityGroupIngress:
+      - CidrIp: "0.0.0.0/0"
+        FromPort: 8080
+        ToPort: 8080
+        IpProtocol: tcp
